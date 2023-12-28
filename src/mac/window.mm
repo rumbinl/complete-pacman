@@ -4,19 +4,26 @@
 #include <MetalKit/MetalKit.h>
 
 float triangle[] = {
-	-340, 240,
-	-340, -240,
-	340, 240, 
-	340, 240,
-	340, -240,
-	-340, -240	
+	-300, 220, 0.0f, 0.0f,
+	-300, -220, 0.0f, 1.0f,
+	300, 220, 1.0f, 0.0f,
+	300, -220, 1.0f, 1.0f,
+};
+
+int indices[] = {
+	0, 1, 2,
+	2, 1, 3
 };
 
 float viewportSize[] = {
 	640,480
 };
 
-void render(MTKView* view, id<MTLCommandQueue> commandQueue, id<MTLRenderPipelineState> pipeline)
+const int texWidth = 224, texHeight = 248;
+
+uint32_t texture[texWidth*texHeight];
+
+void render(MTKView* view, id<MTLCommandQueue> commandQueue, id<MTLRenderPipelineState> pipeline, id<MTLTexture> tex)
 {
 	@autoreleasepool {
 
@@ -26,7 +33,9 @@ void render(MTKView* view, id<MTLCommandQueue> commandQueue, id<MTLRenderPipelin
 		[commandEncoder setViewport:(MTLViewport){0.0, 0.0, view.drawableSize.width, view.drawableSize.height, 0.0, 1.0}];
 		[commandEncoder setRenderPipelineState: pipeline];
 		[commandEncoder setVertexBytes:triangle length:sizeof(triangle) atIndex:0];
-		[commandEncoder setVertexBytes:viewportSize length:sizeof(viewportSize) atIndex:1];
+		[commandEncoder setVertexBytes:indices length:sizeof(indices) atIndex:1];
+		[commandEncoder setVertexBytes:viewportSize length:sizeof(viewportSize) atIndex:2];
+		[commandEncoder setFragmentTexture: tex atIndex: 0];
 
 		[commandEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
 		[commandEncoder endEncoding];
@@ -36,8 +45,24 @@ void render(MTKView* view, id<MTLCommandQueue> commandQueue, id<MTLRenderPipelin
 	}
 }
 
+id<MTLTexture> createTexture(uint32_t* tex, int width, int height, id<MTLDevice> device)
+{
+	MTLTextureDescriptor* textureDescriptor = [[MTLTextureDescriptor alloc]init];
+	textureDescriptor.pixelFormat = MTLPixelFormatBGRA8Unorm;
+	textureDescriptor.width = width;
+	textureDescriptor.height = height;
+
+	id<MTLTexture> result = [device newTextureWithDescriptor: textureDescriptor];
+	MTLRegion region = {0, 0, 0, width, height, 1};
+	[result replaceRegion: region mipmapLevel:0 withBytes:tex bytesPerRow: 4 * width];
+	return result;
+}
+
 int main()
 {
+	for(int i=0;i<texWidth*texHeight; i++)
+		texture[i] = 0xff000000;
+	texture[0] = 0xff2121ff;
 
 	NSRect contentRect = NSMakeRect(0, 0, 640, 480);
 	NSWindowStyleMask styleMask = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable;
@@ -47,7 +72,6 @@ int main()
 
 	id<MTLDevice> device = MTLCreateSystemDefaultDevice();
 	NSError* error = nil;
-	
 
 	if(error != nil)
 		NSLog(@"%@",[error localizedDescription]);
@@ -69,8 +93,10 @@ int main()
 		NSLog(@"%@",[error localizedDescription]);
 
 	id<MTLLibrary> library = [device newLibraryWithSource: source options:compileOptions error:&error];
+	if(error != nil)
+		NSLog(@"%@",[error localizedDescription]);
 	id<MTLFunction> vertexFunction = [library newFunctionWithName:@"vertexShader"];
-	id<MTLFunction> fragmentFunction = [library newFunctionWithName:@"fragmentShader"];
+	id<MTLFunction> fragmentFunction = [library newFunctionWithName:@"samplingShader"];
 
 	MTLRenderPipelineDescriptor* pipeline = [[MTLRenderPipelineDescriptor alloc] init];
 	pipeline.label = @"Pipeline";
@@ -78,10 +104,15 @@ int main()
 	pipeline.fragmentFunction = fragmentFunction;
 	pipeline.colorAttachments[0].pixelFormat = view.colorPixelFormat;
 	
-	id<MTLRenderPipelineState> pipelineState = [device newRenderPipelineStateWithDescriptor: pipeline error: nil];
+	id<MTLRenderPipelineState> pipelineState = [device newRenderPipelineStateWithDescriptor: pipeline error: &error];
+
+	id<MTLTexture> tex = createTexture(texture, texWidth, texHeight, device);
+	if(error != nil)
+		NSLog(@"%@",[error localizedDescription]);
+
 
 	[window setContentView: view];
-	render(view, commandQueue, pipelineState);
+	render(view, commandQueue, pipelineState, tex);
 
 	while([window isVisible])
 	{
