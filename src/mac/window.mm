@@ -23,11 +23,21 @@ const int texWidth = 224, texHeight = 248;
 
 uint32_t texture[texWidth*texHeight];
 
+void setTextureContents(id<MTLTexture> result, uint32_t* tex, int width, int height)
+{
+	MTLRegion region = {0, 0, 0, width, height, 1};
+	[result replaceRegion: region mipmapLevel:0 withBytes:tex bytesPerRow: 4 * width];
+}
+
 void render(MTKView* view, id<MTLCommandQueue> commandQueue, id<MTLRenderPipelineState> pipeline, id<MTLTexture> tex)
 {
 	@autoreleasepool {
-
-		MTLRenderPassDescriptor* renderPass = [view currentRenderPassDescriptor];
+		setTextureContents(tex, texture, texWidth, texHeight);
+		MTLRenderPassDescriptor* renderPass = view.currentRenderPassDescriptor;
+		id<CAMetalDrawable> drawable = ((CAMetalLayer*)view.currentDrawable.layer).nextDrawable;
+		renderPass.colorAttachments[0].texture = drawable.texture;
+		renderPass.colorAttachments[0].loadAction = MTLLoadActionClear;
+		renderPass.colorAttachments[0].storeAction = MTLStoreActionStore;
 		id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
 		id<MTLRenderCommandEncoder> commandEncoder = [commandBuffer renderCommandEncoderWithDescriptor: renderPass];
 		[commandEncoder setViewport:(MTLViewport){0.0, 0.0, view.drawableSize.width, view.drawableSize.height, 0.0, 1.0}];
@@ -39,8 +49,7 @@ void render(MTKView* view, id<MTLCommandQueue> commandQueue, id<MTLRenderPipelin
 
 		[commandEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
 		[commandEncoder endEncoding];
-		id<MTLDrawable> drawable = view.currentDrawable;
-		[commandBuffer presentDrawable: drawable];
+		[commandBuffer presentDrawable: (id<MTLDrawable>) drawable];
 		[commandBuffer commit];
 	}
 }
@@ -62,7 +71,7 @@ int main()
 {
 	for(int i=0;i<texWidth*texHeight; i++)
 		texture[i] = 0xff000000;
-	texture[0] = 0xff2121ff;
+	texture[0] = 0xffff0000;
 
 	NSRect contentRect = NSMakeRect(0, 0, 640, 480);
 	NSWindowStyleMask styleMask = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable;
@@ -110,13 +119,13 @@ int main()
 	if(error != nil)
 		NSLog(@"%@",[error localizedDescription]);
 
-
 	[window setContentView: view];
-	render(view, commandQueue, pipelineState, tex);
 
 	while([window isVisible])
 	{
-		NSEvent* event = [NSApp nextEventMatchingMask:NSEventMaskAny untilDate:[NSDate distantPast] inMode:NSDefaultRunLoopMode dequeue:YES];
+		texture[arc4random_uniform(texWidth*texHeight)] = 0xffff0000;
+		render(view, commandQueue, pipelineState, tex);
+		NSEvent* event = [NSApp nextEventMatchingMask:NSEventMaskAny untilDate:[NSDate distantFuture] inMode:NSDefaultRunLoopMode dequeue:YES];
 	
 		if(event!=nil)
 			[NSApp sendEvent:event];
