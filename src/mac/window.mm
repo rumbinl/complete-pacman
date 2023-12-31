@@ -4,10 +4,10 @@
 #include <MetalKit/MetalKit.h>
 
 float triangle[] = {
-	-300, 220, 0.0f, 0.0f,
-	-300, -220, 0.0f, 1.0f,
-	300, 220, 1.0f, 0.0f,
-	300, -220, 1.0f, 1.0f,
+	-1, 1, 0.0f, 0.0f,
+	-1, -1, 0.0f, 1.0f,
+	1, 1, 1.0f, 0.0f,
+	1, -1, 1.0f, 1.0f,
 };
 
 int indices[] = {
@@ -15,11 +15,15 @@ int indices[] = {
 	2, 1, 3
 };
 
-float viewportSize[] = {
-	640,480
+int viewportSize[] = {
+	0,0
 };
 
 const int texWidth = 224, texHeight = 248;
+
+int texSize[] = {
+	texWidth, texHeight	
+};
 
 uint32_t texture[texWidth*texHeight];
 
@@ -32,6 +36,7 @@ void setTextureContents(id<MTLTexture> result, uint32_t* tex, int width, int hei
 void render(MTKView* view, id<MTLCommandQueue> commandQueue, id<MTLRenderPipelineState> pipeline, id<MTLTexture> tex)
 {
 	@autoreleasepool {
+		NSLog(@"%f", view.drawableSize.width);
 		setTextureContents(tex, texture, texWidth, texHeight);
 		MTLRenderPassDescriptor* renderPass = view.currentRenderPassDescriptor;
 		id<CAMetalDrawable> drawable = ((CAMetalLayer*)view.currentDrawable.layer).nextDrawable;
@@ -40,11 +45,14 @@ void render(MTKView* view, id<MTLCommandQueue> commandQueue, id<MTLRenderPipelin
 		renderPass.colorAttachments[0].storeAction = MTLStoreActionStore;
 		id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
 		id<MTLRenderCommandEncoder> commandEncoder = [commandBuffer renderCommandEncoderWithDescriptor: renderPass];
+		viewportSize[0] = view.drawableSize.width;
+		viewportSize[1] = view.drawableSize.height;
 		[commandEncoder setViewport:(MTLViewport){0.0, 0.0, view.drawableSize.width, view.drawableSize.height, 0.0, 1.0}];
 		[commandEncoder setRenderPipelineState: pipeline];
 		[commandEncoder setVertexBytes:triangle length:sizeof(triangle) atIndex:0];
 		[commandEncoder setVertexBytes:indices length:sizeof(indices) atIndex:1];
 		[commandEncoder setVertexBytes:viewportSize length:sizeof(viewportSize) atIndex:2];
+		[commandEncoder setVertexBytes:texSize length:sizeof(texSize) atIndex:3];
 		[commandEncoder setFragmentTexture: tex atIndex: 0];
 
 		[commandEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
@@ -108,7 +116,7 @@ int main()
 	id<MTLFunction> fragmentFunction = [library newFunctionWithName:@"samplingShader"];
 
 	MTLRenderPipelineDescriptor* pipeline = [[MTLRenderPipelineDescriptor alloc] init];
-	pipeline.label = @"Pipeline";
+	pipeline.label = @"pipeline";
 	pipeline.vertexFunction = vertexFunction;
 	pipeline.fragmentFunction = fragmentFunction;
 	pipeline.colorAttachments[0].pixelFormat = view.colorPixelFormat;
