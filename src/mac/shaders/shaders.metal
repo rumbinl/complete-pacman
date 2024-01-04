@@ -23,7 +23,7 @@ vertex T_Vertex vertexShader(uint vertexID [[vertex_id]], constant float* vertic
 	return out;
 }
 
-fragment float4 samplingShader(T_Vertex in [[stage_in]], texture2d<half> colorTexture [[texture(0)]])
+fragment float4 fragmentShader(T_Vertex in [[stage_in]], texture2d<half> colorTexture [[texture(0)]])
 {
 	constexpr sampler textureSampler = {min_filter::linear, min_filter::linear};
 	

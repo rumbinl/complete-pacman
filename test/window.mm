@@ -3,6 +3,9 @@
 #include <Metal/Metal.h>
 #include <MetalKit/MetalKit.h>
 
+#include <mac/PM_MetalWindow.h>
+#include <mac/PM_MetalTexture.h>
+
 float triangle[] = {
 	-1, 1, 0.0f, 0.0f,
 	-1, -1, 0.0f, 1.0f,
@@ -27,26 +30,24 @@ int texSize[] = {
 
 uint32_t texture[texWidth*texHeight];
 
-void setTextureContents(id<MTLTexture> result, uint32_t* tex, int width, int height)
-{
-	MTLRegion region = {0, 0, 0, width, height, 1};
-	[result replaceRegion: region mipmapLevel:0 withBytes:tex bytesPerRow: 4 * width];
-}
-
 void render(MTKView* view, id<MTLCommandQueue> commandQueue, id<MTLRenderPipelineState> pipeline, id<MTLTexture> tex)
 {
 	@autoreleasepool {
-		NSLog(@"%f", view.drawableSize.width);
-		setTextureContents(tex, texture, texWidth, texHeight);
+		PM_SetMetalTextureContents(tex, texture, texWidth, texHeight);
+
 		MTLRenderPassDescriptor* renderPass = view.currentRenderPassDescriptor;
 		id<CAMetalDrawable> drawable = ((CAMetalLayer*)view.currentDrawable.layer).nextDrawable;
+
 		renderPass.colorAttachments[0].texture = drawable.texture;
 		renderPass.colorAttachments[0].loadAction = MTLLoadActionClear;
 		renderPass.colorAttachments[0].storeAction = MTLStoreActionStore;
+
 		id<MTLCommandBuffer> commandBuffer = [commandQueue commandBuffer];
 		id<MTLRenderCommandEncoder> commandEncoder = [commandBuffer renderCommandEncoderWithDescriptor: renderPass];
+
 		viewportSize[0] = view.drawableSize.width;
 		viewportSize[1] = view.drawableSize.height;
+
 		[commandEncoder setViewport:(MTLViewport){0.0, 0.0, view.drawableSize.width, view.drawableSize.height, 0.0, 1.0}];
 		[commandEncoder setRenderPipelineState: pipeline];
 		[commandEncoder setVertexBytes:triangle length:sizeof(triangle) atIndex:0];
@@ -54,33 +55,16 @@ void render(MTKView* view, id<MTLCommandQueue> commandQueue, id<MTLRenderPipelin
 		[commandEncoder setVertexBytes:viewportSize length:sizeof(viewportSize) atIndex:2];
 		[commandEncoder setVertexBytes:texSize length:sizeof(texSize) atIndex:3];
 		[commandEncoder setFragmentTexture: tex atIndex: 0];
-
 		[commandEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
 		[commandEncoder endEncoding];
+
 		[commandBuffer presentDrawable: (id<MTLDrawable>) drawable];
 		[commandBuffer commit];
 	}
 }
 
-id<MTLTexture> createTexture(uint32_t* tex, int width, int height, id<MTLDevice> device)
-{
-	MTLTextureDescriptor* textureDescriptor = [[MTLTextureDescriptor alloc]init];
-	textureDescriptor.pixelFormat = MTLPixelFormatBGRA8Unorm;
-	textureDescriptor.width = width;
-	textureDescriptor.height = height;
-
-	id<MTLTexture> result = [device newTextureWithDescriptor: textureDescriptor];
-	MTLRegion region = {0, 0, 0, width, height, 1};
-	[result replaceRegion: region mipmapLevel:0 withBytes:tex bytesPerRow: 4 * width];
-	return result;
-}
-
 int main()
 {
-	for(int i=0;i<texWidth*texHeight; i++)
-		texture[i] = 0xff000000;
-	texture[0] = 0xffff0000;
-
 	NSRect contentRect = NSMakeRect(0, 0, 640, 480);
 	NSWindowStyleMask styleMask = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable;
 	NSWindow* window = [[NSWindow alloc] initWithContentRect:contentRect styleMask: styleMask backing: NSBackingStoreBuffered defer: true];
@@ -110,8 +94,10 @@ int main()
 		NSLog(@"%@",[error localizedDescription]);
 
 	id<MTLLibrary> library = [device newLibraryWithSource: source options:compileOptions error:&error];
+
 	if(error != nil)
 		NSLog(@"%@",[error localizedDescription]);
+
 	id<MTLFunction> vertexFunction = [library newFunctionWithName:@"vertexShader"];
 	id<MTLFunction> fragmentFunction = [library newFunctionWithName:@"samplingShader"];
 
@@ -123,7 +109,8 @@ int main()
 	
 	id<MTLRenderPipelineState> pipelineState = [device newRenderPipelineStateWithDescriptor: pipeline error: &error];
 
-	id<MTLTexture> tex = createTexture(texture, texWidth, texHeight, device);
+	id<MTLTexture> tex = PM_CreateMetalTexture(texWidth, texHeight, device);
+
 	if(error != nil)
 		NSLog(@"%@",[error localizedDescription]);
 
