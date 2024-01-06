@@ -1,56 +1,48 @@
-#include <mac/PM_MetalWindow.h>
+#include <mac/PM_MetalRenderer.h>
+#include <window/PM_WindowContext.h>
 
-@implementation PM_MetalRenderer 
+#ifdef __APPLE__
+PM_WindowContext PM_CreateWindowContext(unsigned int windowWidth, unsigned int windowHeight)
 {
-	id<MTLDevice> metalDevice;
-	id<MTLCommandQueue> metalCommandQueue;
-	id<MTLRenderPipelineState> metalPipelineState;
-	id<MTLTexture> mainMetalTexture;
-}
+	PM_WindowContext windowContext;
 
--(nonnull instancetype) initWithMTKView:(nonnull MTKView*) view
-{
-	self = [super init];
+	NSRect contentRect = {0, 0, windowWidth, windowHeight};
+	NSWindowStyleMask styleMask = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable;
 
-	metalDevice = MTLCreateSystemDefaultDevice();
-	metalCommandQueue = [metalDevice newCommandQueue];
+	windowContext.cocoaWindow = [[NSWindow alloc] initWithContentRect:contentRect styleMask: styleMask backing: NSBackingStoreBuffered defer: true];
+	[windowContext.cocoaWindow makeKeyAndOrderFront: nil];
 
-	MTLCompileOptions* metalCompileOptions = [[MTLCompileOptions alloc] init];
+	windowContext.metalView = [[MTKView alloc]initWithFrame:contentRect device: MTLCreateSystemDefaultDevice()];
 
-	NSError* error;
-	NSString* shaderSource = [[NSString alloc] initWithContentsOfFile:@"./shaders.metal" encoding: NSUTF8StringEncoding error: &error];
+	[windowContext.metalView setClearColor: MTLClearColorMake(0.0f, 0.0f, 0.0f,1.0f)];
+	[windowContext.metalView setColorPixelFormat:MTLPixelFormatBGRA8Unorm];
+	[windowContext.metalView setDepthStencilPixelFormat:MTLPixelFormatDepth32Float];
+	[windowContext.metalView setNeedsDisplay: YES];
 
-	if(error != nil)
-		NSLog(@"%@",[error localizedDescription]);
+	windowContext.metalView.framebufferOnly = false;
 
-	id<MTLLibrary> metalLibrary = [metalDevice newLibraryWithSource: shaderSource options: metalCompileOptions error:&error];
+	windowContext.renderDelegate = [[PM_MetalRenderer alloc] initWithMTKView: windowContext.metalView];
+	windowContext.metalView.delegate = windowContext.renderDelegate;
 
-	if(error != nil)
-		NSLog(@"%@",[error localizedDescription]);
+	[windowContext.cocoaWindow setContentView: windowContext.metalView];
 
-	id<MTLFunction> vertexFunction = [metalLibrary newFunctionWithName:@"vertexShader"];
-	id<MTLFunction> fragmentFunction = [metalLibrary newFunctionWithName:@"fragmentShader"];
-
-	MTLRenderPipelineDescriptor* pipelineDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
-	pipelineDescriptor.label = @"pipeline";
-	pipelineDescriptor.vertexFunction = vertexFunction;
-	pipelineDescriptor.fragmentFunction = fragmentFunction;
-	pipelineDescriptor.colorAttachments[0].pixelFormat = view.colorPixelFormat;
+	windowContext.framebuffer = PM_CreateBlankImage(PM_FRAMEBUFFER_WIDTH, PM_FRAMEBUFFER_HEIGHT);
+	PM_ClearImageWithColor(windowContext.framebuffer, 0xffffffff);
 	
-	metalPipelineState = [metalDevice newRenderPipelineStateWithDescriptor: pipelineDescriptor error: &error];
-
-	if(error != nil)
-		NSLog(@"%@",[error localizedDescription]);
-
-	return self;
+	return windowContext;
 }
 
--(void) drawInMTKView:(nonnull MTKView*) view
+void PM_RunLoop(PM_WindowContext windowContext)
 {
+	while([windowContext.cocoaWindow isVisible])
+	{
+		[windowContext.renderDelegate setMetalTexture: windowContext.framebuffer];
+		NSEvent* event = [NSApp nextEventMatchingMask:NSEventMaskAny untilDate:[NSDate distantFuture] inMode: NSDefaultRunLoopMode dequeue: YES];
+	
+		if(event != nil)
+			[NSApp sendEvent: event];	
+	}
 }
 
--(void) mtkView:(nonnull MTKView*) view drawableSizeWillChange:(CGSize) size
-{
-}
+#endif
 
-@end

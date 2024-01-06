@@ -3,18 +3,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <image/PM_Image.h>
 
 typedef struct
 {
 	unsigned imageWidth,imageHeight,isFlipped;
 	uint32_t* pixelArray, *colorPalette;
 } PM_BMP;
-
-typedef struct
-{
-	unsigned imageWidth, imageHeight;
-	uint32_t* pixelArray;
-} PM_Image32;
 
 PM_BMP PM_OpenBMP(char* fileName);
 
