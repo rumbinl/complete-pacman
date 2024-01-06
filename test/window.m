@@ -32,8 +32,8 @@ uint32_t texture[texWidth*texHeight];
 
 void render(MTKView* view, id<MTLCommandQueue> commandQueue, id<MTLRenderPipelineState> pipeline, id<MTLTexture> tex)
 {
+	PM_SetMetalTextureContents(tex, texture, texWidth, texHeight);
 	@autoreleasepool {
-		PM_SetMetalTextureContents(tex, texture, texWidth, texHeight);
 
 		MTLRenderPassDescriptor* renderPass = view.currentRenderPassDescriptor;
 		id<CAMetalDrawable> drawable = ((CAMetalLayer*)view.currentDrawable.layer).nextDrawable;
@@ -88,7 +88,7 @@ int main()
 	view.framebufferOnly = false;
 
 	MTLCompileOptions* compileOptions = [[MTLCompileOptions alloc] init];
-	NSString* source = [[NSString alloc] initWithContentsOfFile:@"./shaders.metal" encoding: NSUTF8StringEncoding error: &error];
+	NSString* source = [[NSString alloc] initWithContentsOfFile:@"shaders/shaders.metal" encoding: NSUTF8StringEncoding error: &error];
 
 	if(error != nil)
 		NSLog(@"%@",[error localizedDescription]);
@@ -99,7 +99,7 @@ int main()
 		NSLog(@"%@",[error localizedDescription]);
 
 	id<MTLFunction> vertexFunction = [library newFunctionWithName:@"vertexShader"];
-	id<MTLFunction> fragmentFunction = [library newFunctionWithName:@"samplingShader"];
+	id<MTLFunction> fragmentFunction = [library newFunctionWithName:@"fragmentShader"];
 
 	MTLRenderPipelineDescriptor* pipeline = [[MTLRenderPipelineDescriptor alloc] init];
 	pipeline.label = @"pipeline";
