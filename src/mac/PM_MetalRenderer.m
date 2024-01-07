@@ -109,7 +109,6 @@ int texSize[] = {
 {
 	if(mainMetalTexture == nil || mainMetalTexture.width != image.imageWidth || mainMetalTexture.height != image.imageHeight)
 	{
-		NSLog(@"Here");
 		MTLTextureDescriptor* textureDescriptor = [[MTLTextureDescriptor alloc]init];
 
 		textureDescriptor.pixelFormat = MTLPixelFormatBGRA8Unorm;

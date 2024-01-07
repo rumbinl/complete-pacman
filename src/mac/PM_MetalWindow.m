@@ -26,10 +26,17 @@ PM_WindowContext PM_CreateWindowContext(unsigned int windowWidth, unsigned int w
 
 	[windowContext.cocoaWindow setContentView: windowContext.metalView];
 
-	windowContext.framebuffer = PM_CreateBlankImage(PM_FRAMEBUFFER_WIDTH, PM_FRAMEBUFFER_HEIGHT);
-	PM_ClearImageWithColor(windowContext.framebuffer, 0xffffffff);
-	
 	return windowContext;
+}
+
+void PM_SetupWindowSprites(PM_WindowContext* windowContext)
+{
+	windowContext->framebuffer = PM_CreateBlankImage(PM_FRAMEBUFFER_WIDTH, PM_FRAMEBUFFER_HEIGHT);
+	PM_ClearImageWithColor(windowContext->framebuffer, 0xffffffff);
+	
+	PM_BMP tilemapBMP = PM_OpenBMP("img/level.bmp");
+	windowContext->tilemapImage = PM_GetImage32(tilemapBMP);	
+	PM_PasteImage(windowContext->framebuffer, windowContext->tilemapImage, 0, 0);
 }
 
 void PM_RunLoop(PM_WindowContext windowContext)

@@ -4,11 +4,12 @@
 #include <MetalKit/MetalKit.h>
 
 #include <window/PM_WindowContext.h>
-#include <mac/PM_MetalTexture.h>
 
 int main()
 {
 	PM_WindowContext windowContext = PM_CreateWindowContext(640, 480);
+
+	PM_SetupWindowSprites(&windowContext);
 
 	PM_RunLoop(windowContext);
 

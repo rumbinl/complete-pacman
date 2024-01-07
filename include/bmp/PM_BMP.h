@@ -7,7 +7,7 @@
 
 typedef struct
 {
-	unsigned imageWidth,imageHeight,isFlipped;
+	unsigned imageWidth,imageHeight,isFlipped,bitsPerPixel;
 	uint32_t* pixelArray, *colorPalette;
 } PM_BMP;
 

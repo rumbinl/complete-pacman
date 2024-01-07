@@ -10,6 +10,7 @@
 #endif
 
 #include <image/PM_Image.h>
+#include <bmp/PM_BMP.h>
 #define PM_FRAMEBUFFER_WIDTH 224
 #define PM_FRAMEBUFFER_HEIGHT 248
 
@@ -21,11 +22,13 @@ typedef struct
 	PM_MetalRenderer* renderDelegate;
 #endif
 
-	PM_Image32 framebuffer;
+	PM_Image32 framebuffer, tilemapImage;
 
 } PM_WindowContext;
 
 PM_WindowContext PM_CreateWindowContext(unsigned int windowWidth, unsigned int windowHeight);
+
+void PM_SetupWindowSprites(PM_WindowContext* windowContext);
 
 void PM_RunLoop(PM_WindowContext windowContext);
 
