@@ -1,28 +1,21 @@
 #ifndef __PM_WINDOWCONTEXT__
 #define __PM_WINDOWCONTEXT__
 
-
-#ifdef __APPLE__
-#include <Foundation/Foundation.h>
-#include <Cocoa/Cocoa.h>
-#include <MetalKit/MetalKit.h>
-#include <mac/PM_MetalRenderer.h>
-#endif
-
+#include <utils/PM_Rectangle.h>
 #include <image/PM_Image.h>
 #include <bmp/PM_BMP.h>
+#include <pacman/PM_Tiles.h>
+#include <limits.h>
+
 #define PM_FRAMEBUFFER_WIDTH 224
 #define PM_FRAMEBUFFER_HEIGHT 248
 
 typedef struct 
 {
 #ifdef __APPLE__
-	NSWindow* cocoaWindow;
-	MTKView* metalView;
-	PM_MetalRenderer* renderDelegate;
+	void* metalWindowState;
 #endif
-
-	PM_Image32 framebuffer, tilemapImage;
+	PM_Image32 framebuffer, tilemapImage, levelImage;
 
 } PM_WindowContext;
 

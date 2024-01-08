@@ -42,7 +42,7 @@ int texSize[] = {
 
 	MTLCompileOptions* metalCompileOptions = [[MTLCompileOptions alloc] init];
 
-	NSError* error;
+	NSError* error = nil;
 	NSString* shaderSource = [[NSString alloc] initWithContentsOfFile:@"shaders/shaders.metal" encoding: NSUTF8StringEncoding error: &error];
 
 	if(error != nil)

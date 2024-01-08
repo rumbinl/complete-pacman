@@ -1,5 +1,5 @@
-#ifndef __PM_METALWINDOW__
-#define __PM_METALWINDOW__
+#ifndef __PM_METALRENDERER__
+#define __PM_METALRENDERER__
 
 #include <MetalKit/MetalKit.h>
 #include <image/PM_Image.h>

@@ -1,10 +1,8 @@
-#include <mac/PM_MetalRenderer.h>
-#include <window/PM_WindowContext.h>
+#include <mac/PM_MetalWindow.h>
 
-#ifdef __APPLE__
-PM_WindowContext PM_CreateWindowContext(unsigned int windowWidth, unsigned int windowHeight)
+PM_MetalWindowState PM_CreateMetalWindow(unsigned int windowWidth, unsigned int windowHeight)
 {
-	PM_WindowContext windowContext;
+	PM_MetalWindowState windowContext;
 
 	NSRect contentRect = {0, 0, windowWidth, windowHeight};
 	NSWindowStyleMask styleMask = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable;
@@ -29,27 +27,14 @@ PM_WindowContext PM_CreateWindowContext(unsigned int windowWidth, unsigned int w
 	return windowContext;
 }
 
-void PM_SetupWindowSprites(PM_WindowContext* windowContext)
+void PM_RunMetalLoop(PM_WindowContext windowContext)
 {
-	windowContext->framebuffer = PM_CreateBlankImage(PM_FRAMEBUFFER_WIDTH, PM_FRAMEBUFFER_HEIGHT);
-	PM_ClearImageWithColor(windowContext->framebuffer, 0xffffffff);
-	
-	PM_BMP tilemapBMP = PM_OpenBMP("img/level.bmp");
-	windowContext->tilemapImage = PM_GetImage32(tilemapBMP);	
-	PM_PasteImage(windowContext->framebuffer, windowContext->tilemapImage, 0, 0);
-}
-
-void PM_RunLoop(PM_WindowContext windowContext)
-{
-	while([windowContext.cocoaWindow isVisible])
+	while([(*(PM_MetalWindowState*)windowContext.metalWindowState).cocoaWindow isVisible])
 	{
-		[windowContext.renderDelegate setMetalTexture: windowContext.framebuffer];
+		[(*(PM_MetalWindowState*)windowContext.metalWindowState).renderDelegate setMetalTexture: windowContext.framebuffer];
 		NSEvent* event = [NSApp nextEventMatchingMask:NSEventMaskAny untilDate:[NSDate distantFuture] inMode: NSDefaultRunLoopMode dequeue: YES];
 	
 		if(event != nil)
 			[NSApp sendEvent: event];	
 	}
 }
-
-#endif
-
