@@ -2,7 +2,6 @@
 
 void PM_DrawLevel(PM_Image32 levelBlueprint, PM_Image32 outputImage, PM_Image32 tilemapImage, unsigned x, unsigned y)
 {
-	PM_Image32 tileHistoryMap = PM_CreateBlankImage(levelBlueprint.imageWidth, levelBlueprint.imageHeight);
 
 	unsigned tileIndex = 1;
 
@@ -12,6 +11,7 @@ void PM_DrawLevel(PM_Image32 levelBlueprint, PM_Image32 outputImage, PM_Image32 
 
 			if(PM_TileMatches(levelBlueprint, i, j))
 			{
+				PM_Image32 tileHistoryMap = PM_CreateBlankImage(levelBlueprint.imageWidth*4, levelBlueprint.imageHeight);
 				PM_DirectionPair pair = PM_TraceTileCluster_Algorithm2(levelBlueprint, tileHistoryMap, tilemapImage, outputImage, i, j, 5, tileIndex++);
 				unsigned tileIndexVert = 0, tileIndexHorz = 0;
 				if(pair.direction1 == PM_OppositeDirection(pair.direction2))
@@ -20,7 +20,7 @@ void PM_DrawLevel(PM_Image32 levelBlueprint, PM_Image32 outputImage, PM_Image32 
 					tileIndexHorz = 0;
 				else
 					tileIndexHorz = 2;
-				PM_PasteImage(tilemapImage, outputImage, PM_RectangleInit(tileIndexHorz * 8, tileIndexVert * 8, 8, 8), PM_RectangleInit(i * 8, j * 8, 8, 8), (min((pair.direction1+1)%4, (pair.direction2+1)%4)+2)%4);
+				PM_PasteImage(tilemapImage, outputImage, PM_RectangleInit(tileIndexHorz * 8, tileIndexVert * 8, 8, 8), PM_RectangleInit(i * 8, j * 8, 8, 8), 0);
 			}
 }
 
