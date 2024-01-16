@@ -12,11 +12,11 @@
 
 typedef struct { unsigned direction1, direction2; } PM_DirectionPair; 
 
-void PM_DrawLevel(PM_Image32 levelBlueprint, PM_Image32 outputImage, PM_Image32 tilemapImage, unsigned x, unsigned y);
+void PM_DrawLevel(PM_Image32 levelBlueprint, PM_Image32 outputImage, PM_Image32 tilemapImage);
 
-void PM_TraceTileCluster_Algorithm1(PM_Image32 levelBlueprint, PM_Image32 tileHistoryMap, PM_Image32 tilemapImage, PM_Image32 outputImage, unsigned x, unsigned y, unsigned lastDirection);
+void PM_TraceTileCluster_Algorithm1(PM_Image32 levelBlueprint, PM_Image32 tileHistoryMap, PM_Image32 tilemapImage, PM_Image32 outputImage, unsigned x, unsigned y);
 
-PM_DirectionPair PM_TraceTileCluster_Algorithm2(PM_Image32 levelBlueprint, PM_Image32 tileHistoryMap, PM_Image32 tilemapImage, PM_Image32 outputImage, unsigned x, unsigned y, unsigned lastDirection, unsigned iterationLevel);
+unsigned PM_TraceTileCluster_Algorithm2(PM_Image32 levelBlueprint, PM_Image32 tileHistoryMap, PM_Image32 tilemapImage, PM_Image32 outputImage, unsigned x, unsigned y, unsigned lastDirection, unsigned iterationLevel);
 
 unsigned PM_TileMatches(PM_Image32 levelBlueprint, unsigned x, unsigned y);
 

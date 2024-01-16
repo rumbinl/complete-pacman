@@ -1,20 +1,12 @@
 #include <pacman/PM_Tiles.h>
 
-PM_DirectionPair PM_TraceTileCluster_Algorithm2(PM_Image32 levelBlueprint, PM_Image32 tileHistoryMap, PM_Image32 tilemapImage, PM_Image32 outputImage, unsigned x, unsigned y, unsigned lastDirection, unsigned iterationIndex)
+unsigned PM_TraceTileCluster_Algorithm2(PM_Image32 levelBlueprint, PM_Image32 tileHistoryMap, PM_Image32 tilemapImage, PM_Image32 outputImage, unsigned x, unsigned y, unsigned lastDirection, unsigned iterationIndex)
 {
-	unsigned contacts = 0;
-	unsigned direction1=lastDirection, direction2 = 5;
+	/*unsigned contacts = 0;
 	for(unsigned currentDirection=0; currentDirection<4; currentDirection++)
 	{
 		unsigned newX = PM_GetX(x,levelBlueprint.imageWidth,currentDirection), newY = PM_GetY(y,levelBlueprint.imageHeight,currentDirection);
-		if(PM_TileMatches(levelBlueprint, newX, newY))
-		{
-			if(direction2 == 5)
-				direction2 = currentDirection;
-			else
-				direction1 = currentDirection;
-			contacts ++;
-		}
+		contacts ++;
 	}
 	if(contacts > 2) 
 	{
@@ -54,7 +46,5 @@ PM_DirectionPair PM_TraceTileCluster_Algorithm2(PM_Image32 levelBlueprint, PM_Im
 			}
 		}
 	}
-
-	PM_DirectionPair pair = { direction1, direction2 };
-	return pair;
+*/
 }
